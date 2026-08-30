@@ -1,0 +1,17 @@
+.DS_Store
+.tapl/
+notes/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
+*.csv
+lessons/
+learning-records/
+assets/
