@@ -1,0 +1,24 @@
+fullnameOverride: headlamp
+
+config:
+  staticPlugins:
+    enabled: false
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  readOnlyRootFilesystem: true
+  runAsGroup: 101
+  runAsNonRoot: true
+  runAsUser: 100
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

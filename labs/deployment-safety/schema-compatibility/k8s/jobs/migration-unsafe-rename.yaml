@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration-unsafe-rename
+  namespace: opsproof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: psql
+          image: postgres:18-alpine
+          env:
+            - name: PGHOST
+              value: postgres
+            - name: PGDATABASE
+              value: opsproof
+            - name: PGUSER
+              value: postgres
+          command: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/migrations/unsafe-rename.sql"]
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      volumes:
+        - name: migrations
+          configMap:
+            name: migration-unsafe-rename
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migration-unsafe-rename
+  namespace: opsproof
+data:
+  unsafe-rename.sql: |
+    ALTER TABLE orders RENAME COLUMN customer_name TO buyer_name;
+

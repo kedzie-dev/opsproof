@@ -1,0 +1,40 @@
+alertmanager:
+  enabled: false
+
+grafana:
+  persistence:
+    enabled: false
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.opsproof-observability.svc.cluster.local
+      uid: loki
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://tempo.opsproof-observability.svc.cluster.local:3100
+      uid: tempo
+      jsonData:
+        httpMethod: GET
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: -5m
+          spanEndTimeShift: 5m
+          tags:
+            - key: service.name
+              value: service_name
+        serviceMap:
+          datasourceUid: prometheus
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    enableRemoteWriteReceiver: true
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi

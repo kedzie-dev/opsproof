@@ -1,0 +1,22 @@
+tempo:
+  retention: 72h
+  reportingEnabled: false
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: http://kube-prometheus-kube-prome-prometheus.opsproof-observability.svc.cluster.local:9090/api/v1/write
+    processor:
+      service_graphs: {}
+      span_metrics: {}
+  overrides:
+    defaults:
+      metrics_generator:
+        processors:
+          - service-graphs
+          - span-metrics
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+serviceMonitor:
+  enabled: true

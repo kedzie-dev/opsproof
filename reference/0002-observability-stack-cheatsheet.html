@@ -1,0 +1,26 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OpsProof 관측 스택 치트시트</title><link rel="stylesheet" href="../assets/course.css"></head><body><main>
+<p class="small">OpsProof 학습 참고 · <a href="../lessons/0002-observability-stack-signal-path.html">Lesson 2</a> · <a href="0001-kind-lab-cheatsheet.html">kind 치트시트</a></p>
+<h1>OpsProof 관측 스택 치트시트</h1>
+<p class="lede">판정은 <strong>Synthetic Check</strong>가 하고, 관측 스택은 실패 원인을 연결해 찾는다.</p>
+<h2>신호별 책임</h2>
+<table><thead><tr><th>신호</th><th>수집·저장</th><th>답하는 질문</th><th>보관</th></tr></thead><tbody><tr><td>Metric</td><td>Prometheus</td><td>언제부터 얼마나 많이 실패·느려졌나?</td><td>7일</td></tr><tr><td>Log</td><td>Alloy → Loki</td><td>Pod와 Kubernetes가 무슨 메시지를 남겼나?</td><td>7일</td></tr><tr><td>Trace</td><td>OTLP → Alloy → Tempo</td><td>한 요청이 FastAPI·PostgreSQL을 어떻게 지났나?</td><td>3일</td></tr></tbody></table>
+<p>Grafana는 세 저장소를 <em>조회</em>한다. Alloy는 전달자이며 저장소가 아니다.</p>
+<h2>실제 데이터 경로</h2>
+<div class="diagram">Pod stdout/stderr ─┐
+Kubernetes events ─┼→ Alloy → Loki ───────┐
+OTLP trace ───────┘       ↓               │
+                            Tempo ─────────┼→ Grafana (조회)
+                              ↓ remote-write│
+Kubernetes metrics ─────→ Prometheus ──────┘
+                 ↑
+       Tempo: span metric / service graph</div>
+<h2>이 Lab에서 기억할 세 가지</h2>
+<ol><li><code>opsproof-order-api</code>는 OTLP gRPC endpoint <code>k8s-monitoring-app.…:4317</code>로 <strong>trace만</strong> 보낸다. <code>OTEL_METRICS_EXPORTER=none</code>, <code>OTEL_LOGS_EXPORTER=none</code>이다.</li><li>앱 JSON stdout은 코드 변경 없이 Alloy가 Loki로 보낸다. observability namespace 자체는 수집에서 제외한다.</li><li>Tempo는 trace를 3일 저장하고, metric generator가 span metric·service graph를 Prometheus로 remote-write한다. 그래서 Prometheus에서 <code>traces_spanmetrics_calls_total</code>을 조회할 수 있다.</li></ol>
+<h2>원인 탐색 순서</h2>
+<pre><code>1. Synthetic Check 결과: 계약 통과/실패를 확정
+2. Loki: 같은 시각의 API error와 Kubernetes event 확인
+3. Tempo: 실패 요청의 FastAPI → psycopg/PostgreSQL span 확인
+4. Prometheus: 실패율·지연이 언제, 얼마나 변했는지 확인</code></pre>
+<p class="callout"><strong>경계:</strong> Grafana의 빈 화면은 “계약이 통과했다”는 증거가 아니다. 이 로컬 stack은 single replica, short retention, PVC 5Gi이며 production 관측 플랫폼이 아니다.</p>
+<p class="small">Sources: <a href="https://prometheus.io/docs/introduction/overview/">Prometheus overview</a>, <a href="https://grafana.com/docs/loki/latest/send-data/">Loki log ingestion</a>, <a href="https://opentelemetry.io/docs/zero-code/python/">OpenTelemetry Python</a>, <a href="https://grafana.com/docs/tempo/latest/metrics-from-traces/metrics-generator/">Tempo metrics-generator</a>. 질문은 언제든지 이 에이전트에게 하세요.</p>
+</main></body></html>

@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: synthetic-check
+  namespace: opsproof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: check
+          image: opsproof/order-api:v1
+          imagePullPolicy: Never
+          command: ["python", "-m", "opsproof.synthetic_check"]
+          env:
+            - name: ORDER_API_URL
+              value: http://order-api:8000
+            - name: CHECK_ATTEMPTS
+              value: "30"
+            - name: CHECK_INTERVAL_SECONDS
+              value: "0.5"
+

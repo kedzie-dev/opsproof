@@ -1,0 +1,4 @@
+interface:
+  display_name: "Industry Language Review"
+  short_description: "Review technical wording against industry usage"
+  default_prompt: "Use $industry-language-review to review these Korean technical sentences for industry usage and revise them minimally."

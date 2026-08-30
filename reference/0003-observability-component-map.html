@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OpsProof 관측 구성요소 지도</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <p class="small">OpsProof 학습 참고 · <a href="../lessons/0003-observability-components.html">Lesson 3</a> · <a href="0002-observability-stack-cheatsheet.html">신호 흐름 치트시트</a></p>
+  <h1>관측 스택 구성요소 지도</h1>
+  <p class="lede">각 이름을 “무엇을 받고, 무엇을 내보내며, 저장하는가?”로 읽는다.</p>
+  <table>
+    <thead><tr><th>구성요소</th><th>받는 것</th><th>내보내는 것</th><th>저장?</th></tr></thead>
+    <tbody>
+      <tr><td>FastAPI + OTel 자동 계측</td><td>HTTP 요청, psycopg SQL</td><td>OTLP trace span</td><td>아니오</td></tr>
+      <tr><td>Alloy <code>app</code></td><td>Pod의 OTLP gRPC trace</td><td>Tempo로 trace</td><td>아니오</td></tr>
+      <tr><td>Alloy <code>logs</code></td><td>각 node의 Pod stdout/stderr</td><td>Loki로 log</td><td>아니오</td></tr>
+      <tr><td>Alloy <code>events</code></td><td>Kubernetes Event</td><td>Loki로 event log</td><td>아니오</td></tr>
+      <tr><td>Loki</td><td>log와 Kubernetes event</td><td>LogQL 조회 결과</td><td>예 · 7일</td></tr>
+      <tr><td>Tempo</td><td>trace</td><td>trace 조회, 파생 metric</td><td>예 · 3일</td></tr>
+      <tr><td>Tempo metrics-generator</td><td>Tempo가 받은 span</td><td>Prometheus remote-write metric</td><td>아니오</td></tr>
+      <tr><td>Prometheus</td><td>Kubernetes scrape metric, remote-write metric</td><td>PromQL 조회 결과</td><td>예 · 7일</td></tr>
+      <tr><td>Grafana</td><td>사용자의 query</td><td>세 저장소의 화면</td><td>관측 신호는 아니오</td></tr>
+    </tbody>
+  </table>
+  <h2>이 프로젝트의 실제 경로</h2>
+  <div class="diagram">POST /orders
+    │
+    ├─ FastAPI 자동 계측 ─ OTLP trace ─ Alloy app ─ Tempo (3d)
+    │                                              │
+    │                                   metrics-generator
+    │                                              │ remote-write
+    │                                              ▼
+    │                                   Prometheus (7d) ◀─ Kubernetes scrape
+    │                                              │
+    ├─ Pod stdout/stderr ─ Alloy logs ─ Loki (7d)  │
+    └─ Kubernetes Event ─ Alloy events ─ Loki (7d) │
+                                                   ▼
+                                      Grafana: 세 저장소를 조회</div>
+  <h2>헷갈리기 쉬운 세 경계</h2>
+  <ol>
+    <li><strong>Helm release ≠ 하나의 Pod.</strong> <code>k8s-monitoring</code>은 Alloy Operator와 여러 collector workload를 설치하는 한 release다.</li>
+    <li><strong>OTLP ≠ 저장소.</strong> 앱이 telemetry를 보내는 protocol이다. 이 Lab에서는 trace만 OTLP로 보낸다.</li>
+    <li><strong>Grafana ≠ 판정기.</strong> Grafana는 Loki·Tempo·Prometheus를 읽는다. Deployment Gate의 PASS/FAIL은 Synthetic Check Job이 정한다.</li>
+  </ol>
+  <p class="callout"><strong>고장 찾기:</strong> “요청 하나가 왜 실패했나?”는 Tempo → Loki. “언제부터 얼마나 자주 실패했나?”는 Prometheus. “계약이 통과했나?”는 Synthetic Check Job이다.</p>
+  <p class="small">Sources: <a href="https://opentelemetry.io/docs/concepts/signals/">OpenTelemetry Signals</a>, <a href="https://grafana.com/docs/grafana-cloud/observe-and-act/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/">Grafana Alloy collector reference</a>, <a href="https://grafana.com/docs/tempo/latest/metrics-from-traces/metrics-generator/">Tempo metrics-generator</a>, <a href="https://prometheus.io/docs/introduction/overview/">Prometheus overview</a>. 질문은 언제든지 이 에이전트에게 하세요.</p>
+</main>
+</body>
+</html>

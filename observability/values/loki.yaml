@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/grafana-community/helm-charts/loki-18.9.1/charts/loki/values.schema.json
+# Grafana Community Loki chart 18.9.1 values. The schema above is intentionally
+# chart-specific; a Kubernetes-manifest schema incorrectly rejects Helm values.
+deploymentMode: Monolithic
+
+loki:
+  auth_enabled: false
+  useTestSchema: true
+  storage:
+    type: filesystem
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
+  limits_config:
+    retention_period: 168h
+
+singleBinary:
+  enabled: true
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 5Gi
+
+read:
+  enabled: false
+  replicas: 0
+write:
+  enabled: false
+  replicas: 0
+backend:
+  enabled: false
+  replicas: 0
+
+lokiCanary:
+  enabled: false
+test:
+  enabled: false
+
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false

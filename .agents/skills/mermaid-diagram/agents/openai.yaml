@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mermaid Diagram"
+  short_description: "Design clear, minimal Mermaid diagrams"
+  default_prompt: "Use $mermaid-diagram to select and add clear Mermaid diagrams to this document."

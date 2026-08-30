@@ -1,0 +1,31 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>kind 실습 치트시트</title><link rel="stylesheet" href="../assets/course.css"></head><body><main>
+<p class="small">OpsProof 학습 참고 · <a href="../lessons/0001-kind-cluster-context-and-image-flow.html">Lesson 1</a></p>
+<h1>kind × OpsProof 치트시트</h1>
+<p class="lede">kind는 Docker 컨테이너를 Kubernetes <em>node</em>로 사용하는 로컬 cluster 도구다. 이 프로젝트의 cluster 이름은 <code>opsproof</code>, kubectl context 이름은 <code>kind-opsproof</code>다.</p>
+<h2>세 층을 구분</h2><div class="diagram">host macOS
+  └─ Docker container: opsproof-control-plane  ← Kubernetes node
+       └─ Kubernetes cluster: opsproof
+            └─ namespace: opsproof → Pods / Jobs / Deployment</div>
+<h2>명령 지도</h2><pre><code># kind: cluster 자체
+kind get clusters
+kind get nodes --name opsproof
+kind delete cluster --name opsproof
+
+# kubectl: cluster 안 Kubernetes resource
+kubectl --context kind-opsproof cluster-info
+kubectl --context kind-opsproof get nodes
+kubectl --context kind-opsproof -n opsproof get pods,jobs,deployment,statefulset
+
+# Docker image → kind node (앱 코드를 수정/재빌드했을 때)
+docker build -t opsproof/order-api:v1 .
+kind load docker-image opsproof/order-api:v1 --name opsproof</code></pre>
+<h2>이 저장소에서는</h2><pre><code>make cluster-up     # kind create cluster --name opsproof ...
+make build-images   # Docker build/tag + kind load docker-image
+make baseline       # Kubernetes resource 배포 및 대기
+make cluster-down   # kind delete cluster --name opsproof</code></pre>
+<p class="callout"><strong>핵심:</strong> <code>kind get clusters</code>의 <code>opsproof</code>는 “cluster가 있다”는 뜻이다. 앱 image가 node에 있고, namespace 안 workload가 Ready라는 뜻은 아니다.</p>
+<h2>막혔을 때</h2><pre><code>kind export logs ./kind-logs --name opsproof
+docker ps --format 'table {{.Names}}\t{{.Status}}'
+kubectl --context kind-opsproof get events -A --sort-by=.lastTimestamp</code></pre>
+<p class="small">Source: <a href="https://kind.sigs.k8s.io/docs/user/quick-start/">kind Quick Start</a>. 질문은 언제든지 이 에이전트에게 하세요.</p>
+</main></body></html>

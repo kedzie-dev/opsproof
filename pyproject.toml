@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opsproof"
+version = "0.1.0"
+description = "Reproducible Kubernetes deployment-safety experiments."
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "httpx>=0.28,<1",
+  "psycopg[binary]>=3.2,<4",
+  "opentelemetry-distro>=0.57b0,<1",
+  "opentelemetry-exporter-otlp-proto-grpc>=1.36,<2",
+  "opentelemetry-instrumentation-fastapi>=0.57b0,<1",
+  "opentelemetry-instrumentation-psycopg>=0.57b0,<1",
+  "uvicorn[standard]>=0.32,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

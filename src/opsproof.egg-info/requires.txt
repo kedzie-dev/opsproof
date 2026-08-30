@@ -1,0 +1,11 @@
+fastapi<1,>=0.115
+httpx<1,>=0.28
+psycopg[binary]<4,>=3.2
+opentelemetry-distro<1,>=0.57b0
+opentelemetry-exporter-otlp-proto-grpc<2,>=1.36
+opentelemetry-instrumentation-fastapi<1,>=0.57b0
+opentelemetry-instrumentation-psycopg<1,>=0.57b0
+uvicorn[standard]<1,>=0.32
+
+[dev]
+pytest<9,>=8.3

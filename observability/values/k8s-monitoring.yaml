@@ -1,0 +1,55 @@
+cluster:
+  name: opsproof
+
+global:
+  scrapeInterval: 30s
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki-gateway.opsproof-observability.svc.cluster.local/loki/api/v1/push
+  tempo:
+    type: otlp
+    protocol: grpc
+    url: tempo.opsproof-observability.svc.cluster.local:4317
+    metrics:
+      enabled: false
+    logs:
+      enabled: false
+
+collectors:
+  app:
+    presets: [deployment, otel-receiver]
+  events:
+    presets: [singleton]
+  logs:
+    presets: [filesystem-log-reader, daemonset]
+
+podLogsViaLoki:
+  enabled: true
+  collector: logs
+  namespaces: []
+  excludeNamespaces: [opsproof-observability]
+  onlyGatherNewLogLines: true
+  alignServiceNameWithOTelSemConv: true
+
+clusterEvents:
+  enabled: true
+  collector: events
+  excludeNamespaces: [opsproof-observability]
+
+applicationObservability:
+  enabled: true
+  collector: app
+  alignServiceNameWithOTelSemConv: true
+  metrics:
+    enabled: false
+  logs:
+    enabled: false
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+selfReporting:
+  enabled: false
