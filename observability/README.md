@@ -1,3 +1,5 @@
+포트
+
 # Shared Local Observability Stack
 
 이 디렉터리는 특정 Lab이 소유하지 않는 `kind-opsproof` 클러스터용 관측 스택이다. 각 모듈은 Grafana를 새로 설치하지 않고 이 스택의 OTLP 수집기와 Grafana를 함께 쓴다.
@@ -28,13 +30,19 @@ make observability-status
 make grafana
 ```
 
-`make grafana`는 `http://localhost:3301`을 연다. 3000은 쓰지 않는다. 3301도 사용 중이면 포트만 바꾼다.
+그라파나 대시보드: `http://localhost:3301`
 
 ```sh
 GRAFANA_PORT=3302 make grafana
 ```
 
-Grafana의 로그인 Secret은 Helm이 namespace 안에 만든다. 값은 문서·Git에 복사하지 않는다. 외부 ingress는 만들지 않는다.
+Grafana의 로그인 Secret은 Helm이 namespace 안에 만든다. 사용자 이름은 `admin`이다. 비밀번호는 로컬에서만 아래 명령으로 확인한다. 값은 문서·Git에 복사하지 않는다. 외부 ingress는 만들지 않는다.
+
+```sh
+kubectl -n opsproof-observability get secret kube-prometheus-grafana \
+  -o jsonpath='{.data.admin-password}' | base64 --decode
+echo
+```
 
 ## 다른 모듈 연결
 
