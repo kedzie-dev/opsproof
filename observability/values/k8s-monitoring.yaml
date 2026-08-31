@@ -12,6 +12,8 @@ destinations:
     type: otlp
     protocol: grpc
     url: tempo.opsproof-observability.svc.cluster.local:4317
+    tls:
+      insecure: true
     metrics:
       enabled: false
     logs:

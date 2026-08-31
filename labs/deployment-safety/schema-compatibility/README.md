@@ -83,6 +83,11 @@ kubectl --context kind-opsproof -n opsproof get pods,jobs,deployment,statefulset
 - `postgres-0`이 `1/1 Running`
 - `migration-v1` Job이 `Complete`
 - `order-api` Deployment가 `2/2 Available`
+- `synthetic-check` Job이 `Complete`이고 마지막 로그의 `"failures"`가 `0`
+
+`make baseline`은 기준선 배포 뒤 Synthetic Check를 한 번 실행한다. 따라서
+기준선의 실제 요청·저장 검증 결과를 바로 남기고, 관측 스택을 실행했다면
+Grafana에 초기 trace·metric·log도 만든다.
 
 ## 선택: 실시간 관측
 
@@ -92,7 +97,17 @@ Lab의 직접 판정 근거는 Synthetic Check Job이다. Grafana는 이를 대�
 make observability-up
 make build-images
 make baseline
+make grafana
 ```
+
+Grafana의 **Dashboards → OpsProof / Schema Compatibility**에서 다음을 함께 본다.
+
+- `order-api`의 desired/available replica
+- `POST /orders` 요청량, 오류 수, p95 지연 시간
+- API Pod 로그와 최근 trace
+
+이 dashboard는 Synthetic Check가 만드는 요청을 표시하는 원인 탐색용 화면이다.
+실험의 통과·실패는 계속 Synthetic Check Job의 종료 상태와 로그로 판정한다.
 
 자세한 설치·보관 정책·다른 모듈 연결 방법은 [공유 관측 README](../../../observability/README.md)를 참고한다.
 

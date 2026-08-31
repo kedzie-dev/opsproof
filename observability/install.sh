@@ -45,4 +45,6 @@ helm upgrade --install k8s-monitoring grafana/k8s-monitoring \
   "${failure_cleanup[@]}" \
   --wait --timeout 5m
 
+kubectl apply -k "$observability_dir/dashboards"
+
 echo "Grafana: make grafana (default http://localhost:3301)"

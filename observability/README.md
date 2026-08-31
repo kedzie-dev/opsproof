@@ -1,6 +1,4 @@
-포트
-
-# Shared Local Observability Stack
+Shared Local Observability Stack
 
 이 디렉터리는 특정 Lab이 소유하지 않는 `kind-opsproof` 클러스터용 관측 스택이다. 각 모듈은 Grafana를 새로 설치하지 않고 이 스택의 OTLP 수집기와 Grafana를 함께 쓴다.
 
@@ -36,7 +34,14 @@ make grafana
 GRAFANA_PORT=3302 make grafana
 ```
 
-Grafana의 로그인 Secret은 Helm이 namespace 안에 만든다. 사용자 이름은 `admin`이다. 비밀번호는 로컬에서만 아래 명령으로 확인한다. 값은 문서·Git에 복사하지 않는다. 외부 ingress는 만들지 않는다.
+`Schema Compatibility Lab`을 기준선까지 실행하면 **Dashboards → OpsProof /
+Schema Compatibility**가 자동으로 생긴다. 이 dashboard는 Order API의 replica,
+`POST /orders` 요청량·오류·p95 지연 시간, API 로그, 최근 trace를 한 화면에 보여 준다.
+직접 통과·실패 판정은 계속 Synthetic Check Job의 결과를 사용한다.
+
+- Grafana 로그인 Secret은 Helm이 namespace 안에 만든다.
+- Username: `admin`
+- 비밀번호는 로컬에서만 아래 명령으로 확인.
 
 ```sh
 kubectl -n opsproof-observability get secret kube-prometheus-grafana \
@@ -46,7 +51,7 @@ echo
 
 ## 다른 모듈 연결
 
-Kubernetes에서 실행하는 모듈은 아래 OTLP endpoint를 공통으로 쓴다. 이 주소는 Pod 내부 주소이지 localhost가 아니다.
+- Kubernetes에서 실행하는 모듈은 아래 OTLP endpoint로 관측 데이터를 보낸다.
 
 ```yaml
 env:
@@ -58,11 +63,13 @@ env:
     value: http://k8s-monitoring-app.opsproof-observability.svc.cluster.local:4317
 ```
 
-stdout/stderr log는 코드를 바꾸지 않아도 Loki가 수집한다. 각 모듈은 trace를 보내려면 OpenTelemetry SDK 또는 자동 계측을 켜야 한다. `OTEL_SERVICE_NAME`은 Grafana에서 서비스를 구분하는 이름이므로 모듈마다 고정된 고유값을 정한다.
+- stdout/stderr log는 코드를 바꾸지 않아도 Loki가 수집한다.
+- 각 모듈은 trace를 보내려면 OpenTelemetry SDK 또는 자동 계측을 켜야 한다.
+- `OTEL_SERVICE_NAME`은 Grafana에서 서비스를 구분하는 이름이므로 모듈마다 고정된 고유값을 정한다.
 
 ## Schema Compatibility Lab의 자동 계측
 
-이미지는 다음 wrapper로 API 프로세스를 시작한다.
+Schema Compatibility Lab의 API 컨테이너는 자동 계측을 적용하기 위해 아래 wrapper를 통해 애플리케이션 프로세스를 시작한다.
 
 ```text
 opentelemetry-instrument uvicorn --factory opsproof.api:create_app ...
@@ -86,11 +93,14 @@ sequenceDiagram
   A->>T: store trace
 ```
 
-자동 계측은 지원하는 라이브러리 경계만 관찰한다. `validate_order` 같은 업무 단계를 보려면 코드에 manual span을 추가해야 한다. 이 구성에서 앱 log는 OTLP로 내보내지 않는다. JSON stdout → Alloy → Loki 경로를 사용한다.
+- 자동 계측은 지원하는 라이브러리 경계만 관찰한다.
+- `validate_order` 같은 업무 단계를 보려면 코드에 manual span을 추가해야 한다.
+- 이 구성에서 앱 log는 OTLP로 내보내지 않는다. JSON stdout → Alloy → Loki 경로를 사용한다.
 
 ## `k8s-monitoring` release의 의미
 
-이 저장소는 custom Helm chart를 만들지 않는다. 설치기는 아래 기존 chart의 version을 고정하고, 이 저장소의 `values/`만 전달한다.
+- 이 저장소는 custom Helm chart를 만들지 않는다.
+- 아래 기존 chart의 version을 고정하고, 이 저장소의 `values/`만 전달한다.
 
 | Release             | 기존 chart                                            |
 | ------------------- | ----------------------------------------------------- |
@@ -108,7 +118,9 @@ Loki는 공식 Community chart의 `Monolithic` 모드와 chart 전용 JSON Schem
 1. Grafana **Explore → Loki**: `{namespace="opsproof"}` 또는 다른 모듈 namespace로 logs를 찾는다.
 2. **Explore → Tempo**: `service.name = opsproof-order-api` 같은 서비스 이름으로 traces를 찾는다.
 3. Prometheus: `traces_spanmetrics_calls_total` 또는 `traces_service_graph_request_total`을 조회한다.
-4. Pod 상태·Event·YAML은 별도 [Headlamp cluster UI](../cluster-ui/README.md)에서 빠르게 탐색한다.
+4. Schema Compatibility Lab은 **Dashboards → OpsProof / Schema Compatibility**에서 API replica,
+   요청·오류·지연 시간, log·trace를 함께 본다.
+5. Pod 상태·Event·YAML은 별도 [Headlamp cluster UI](../cluster-ui/README.md)에서 빠르게 탐색한다.
 
 이 구성은 단일 kind 클러스터에서만 쓴다. single replica, PVC 5Gi, short retention이며 HA·object storage·인증된 ingress·production 접근제어는 제공하지 않는다. Lab의 직접 판정 근거는 Synthetic Check Job이다. Grafana는 원인 탐색을 돕는다.
 

@@ -41,6 +41,8 @@ apply_baseline() {
   kubectl apply -f "$k8s_dir/jobs/migration-v1.yaml"
   kubectl -n "$namespace" wait --for=condition=complete job/migration-v1 --timeout=1m
   kubectl -n "$namespace" rollout status deployment/order-api --timeout=2m
+  start_check
+  check_result
 }
 
 start_check() {
