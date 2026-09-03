@@ -17,9 +17,10 @@ Order API를 두 Pod로 실행하고, DB 스키마와 API 버전을 바꾸며 Ro
 | 호환되지 않는 변경        | `customer_name`을 `buyer_name`으로 즉시 rename하고 v2 배포 | 롤아웃이 완료되고 준비성 프로브가 통과해도 v1 Pod의 실제 요청이 실패하는가 | 요청 검증 실패를 감지하면 실험 성공 |
 | 이전 버전과 호환되는 변경 | NULL을 허용하는`buyer_name` column을 추가하고 v2 배포        | v1·v2 Pod가 함께 있는 동안에도 주문 생성·저장이 유지되는가               | 통과                                |
 
-호환되는 변경에서는 v2를 v1으로 롤백한 뒤에도 주문 생성이 계속되는지 확인한다. `buyer_name` column을 추가해도 v1은 기존 `customer_name` column을 계속 사용한다. 따라서 Deployment를 이전 리비전으로 롤백할 수 있다.
+- 호환되는 변경에서는 v2를 v1으로 롤백한 뒤에도 주문 생성이 계속되는지 확인한다.
+- `buyer_name` column을 추가해도 v1은 기존 `customer_name` column을 계속 사용한다. 따라서 Deployment를 이전 리비전으로 롤백할 수 있다.
 
-`customer_name` column을 `buyer_name`으로 rename한 경우에는 Deployment를 v1으로 롤백해도 v1이 사용할 `customer_name` column이 없다. 스키마도 되돌려야 한다. 이 Lab에서는 클러스터를 새로 만든 뒤 다음 시나리오를 시작한다.
+`customer_name` column을 `buyer_name`으로 rename한 경우에는 Deployment를 v1으로 롤백해도 v1이 사용할 `customer_name` column이 없으며, 스키마도 되돌려야 한다. 이 Lab에서는 클러스터를 새로 만든 뒤 다음 시나리오를 시작한다.
 
 ### 무엇을 증거로 판정하나
 
@@ -52,7 +53,7 @@ MVP Deployment Contract: RollingUpdate 동안 모든 synthetic `POST /orders` �
 이 디렉터리에서 Schema Compatibility Experiment를 실행한다.
 
 - `Makefile`: 모듈 실행 진입점
-- `lab.sh`: kind 클러스터 생성, 이미지 적재, 기준선 적용·변경·롤백 실행기
+- `lab.sh`: kind 클러스터 생성, 이미지 적재, 초기 버전 적용·변경·롤백 실행기
 - `kind-config.yaml`: 이 Lab 전용 kind 클러스터 설정
 - `Dockerfile`: Reference Service 이미지 정의. 빌드 context는 프로젝트 루트이며 `src/`와 `pyproject.toml`을 사용한다.
 - `k8s/`: Kustomize base, revision overlay, Migration Job, Synthetic Check Job, SQL
@@ -72,7 +73,7 @@ make build-images
 make baseline
 ```
 
-기준선 상태를 확인한다.
+'make baseline' 실행 후 상태를 확인한다.
 
 ```sh
 kubectl --context kind-opsproof -n opsproof get pods,jobs,deployment,statefulset
@@ -85,8 +86,8 @@ kubectl --context kind-opsproof -n opsproof get pods,jobs,deployment,statefulset
 - `order-api` Deployment가 `2/2 Available`
 - `synthetic-check` Job이 `Complete`이고 마지막 로그의 `"failures"`가 `0`
 
-`make baseline`은 기준선 배포 뒤 Synthetic Check를 한 번 실행한다. 따라서
-기준선의 실제 요청·저장 검증 결과를 바로 남기고, 관측 스택을 실행했다면
+`make baseline`은 초기 버전을 배포한 뒤 Synthetic Check를 한 번 실행한다. 따라서
+초기 버전의 실제 요청·저장 검증 결과를 바로 남기고, 관측 스택을 실행했다면
 Grafana에 초기 trace·metric·log도 만든다.
 
 ## 선택: 실시간 관측
@@ -144,11 +145,11 @@ pytest 전체가 `2 passed`처럼 통과하면 준비가 끝난다. 경고는 �
 
 ---
 
-## TS-01: v1 기준선의 실제 요청 검증
+## TS-01: v1 초기 버전의 실제 요청 검증
 
 ### 목적
 
-v1 스키마와 API가 MVP Deployment Contract를 만족하는 기준선을 마련한다.
+v1 스키마와 API가 MVP Deployment Contract를 만족하는 초기 상태를 마련한다.
 
 ### 전제조건
 
@@ -199,7 +200,7 @@ Job은 `order-api` Service로 주문 생성 요청을 30회 보내고, 각 Order
 - `synthetic_check_passed` event가 30개
 - 마지막 요약의 `"failures": 0`
 
-이 결과는 이후 변경 결과를 비교할 **기준선**이다. 하나라도 만족하지 않으면 다음
+이 결과는 이후 변경 결과를 비교할 **기준**이다. 하나라도 만족하지 않으면 다음
 시나리오로 진행하지 않고 PostgreSQL, Migration Job, API 로그를 먼저 확인한다.
 
 ---

@@ -89,11 +89,11 @@ make help
 kind get clusters
 kubectl --context kind-opsproof get nodes
 
-# 2. image 준비와 기준선 배포
+# 2. 이미지 준비와 초기 버전 배포
 make build-images
 make baseline
 
-# 3. 기준선 확인
+# 3. 초기 버전 확인
 kubectl --context kind-opsproof -n opsproof get pods,jobs,deployment,statefulset
 ```
 

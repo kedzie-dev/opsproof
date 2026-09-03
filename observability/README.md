@@ -34,7 +34,7 @@ make grafana
 GRAFANA_PORT=3302 make grafana
 ```
 
-`Schema Compatibility Lab`을 기준선까지 실행하면 **Dashboards → OpsProof /
+`Schema Compatibility Lab`을 초기 버전 배포까지 실행하면 **Dashboards → OpsProof /
 Schema Compatibility**가 자동으로 생긴다. 이 dashboard는 Order API의 replica,
 `POST /orders` 요청량·오류·p95 지연 시간, API 로그, 최근 trace를 한 화면에 보여 준다.
 직접 통과·실패 판정은 계속 Synthetic Check Job의 결과를 사용한다.
