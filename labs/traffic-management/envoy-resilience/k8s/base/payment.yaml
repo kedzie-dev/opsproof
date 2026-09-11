@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-api
+spec:
+  selector:
+    app.kubernetes.io/name: payment-api
+  ports:
+    - port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payment-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payment-api
+    spec:
+      containers:
+        - name: payment-api
+          image: opsproof/traffic-demo:v1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ROLE
+              value: payment
+            - name: PAYMENT_DELAY_MS
+              value: "0"
+            - name: PAYMENT_FAIL_EVERY
+              value: "0"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /health, port: http }

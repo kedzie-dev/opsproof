@@ -1,0 +1,37 @@
+services:
+  order-v1:
+    build: ./app
+    environment:
+      VERSION: v1
+      FAIL_EVERY: "0"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  order-v2:
+    build: ./app
+    environment:
+      VERSION: v2
+      # This is deliberately bad: every v2 request returns 503.
+      FAIL_EVERY: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${NGINX_LAB_PORT:-18080}:8080"
+    volumes:
+      # Mount a directory, not one config file: nginx reload must see the
+      # replacement file after the host script switches configurations.
+      - ./runtime:/etc/nginx/conf.d:ro
+    depends_on:
+      order-v1:
+        condition: service_healthy
+      order-v2:
+        condition: service_healthy

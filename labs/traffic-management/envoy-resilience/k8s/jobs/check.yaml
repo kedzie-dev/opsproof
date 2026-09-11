@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: traffic-check
+  namespace: opsproof-traffic
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: client
+          image: opsproof/traffic-demo:v1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ROLE
+              value: client
+            - name: REQUESTS
+              value: "10"
+            - name: CONCURRENCY
+              value: "1"

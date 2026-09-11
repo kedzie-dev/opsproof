@@ -18,6 +18,7 @@ RollingUpdate 중 모든 synthetic `POST /orders` 요청은 성공해야 하며,
 
 - [Deployment Safety](./labs/deployment-safety/README.md): 배포 중 핵심 기능을 검증하고 문제를 감지·복구하는 Lab 모음.
   - [Schema Compatibility](./labs/deployment-safety/schema-compatibility/README.md): RollingUpdate 중 DB schema 호환성을 검증한다.
+- [Traffic Management](./labs/traffic-management/README.md): nginx 카나리 롤백과 Envoy 사이드카 장애 격리를 직접 실행한다.
 
 ## 로컬 실행 순서
 
