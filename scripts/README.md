@@ -24,3 +24,6 @@ KIND_VERSION=v0.31.0 KUBECTL_VERSION=v1.34.0 ./scripts/install-kind-kubectl.sh
 
 이미 `PATH`에 있는 도구는 다시 설치하지 않는다. 최신 파일로 다시 설치하려면
 `FORCE=1`을 지정한다. 기본 설치 위치가 맞지 않으면 `INSTALL_DIR`을 지정할 수 있다.
+## 공유 실행 스크립트
+
+- `kind-cluster.sh`: 모든 Lab이 쓰는 `opsproof` kind 클러스터를 생성하거나 삭제한다. 루트에서 `make cluster-up` 또는 `make cluster-down`으로 실행한다. 설정은 `kind/opsproof.yaml`에 있다.

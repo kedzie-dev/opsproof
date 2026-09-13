@@ -66,7 +66,10 @@ case "${1:-}" in
   load) load ;;
   status) kubectl -n "$namespace" get deployment,pods,svc,jobs ;;
   logs) kubectl -n "$namespace" logs deployment/order-api -c envoy --tail="${2:-80}" ;;
-  stats) echo "Run: kubectl -n $namespace port-forward service/envoy-admin 19901:9901" ;;
+  stats)
+    echo "In another terminal, run:"
+    echo "  kubectl -n $namespace port-forward service/envoy-admin 19901:9901"
+    ;;
   clean) kubectl delete namespace "$namespace" --ignore-not-found ;;
   *)
     echo "usage: $0 {build|deploy|incident|recover|check|load|status|logs|stats|clean}" >&2

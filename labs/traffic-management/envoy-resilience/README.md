@@ -13,34 +13,56 @@
 ```bash
 cd labs/traffic-management/envoy-resilience
 make cluster-up
-make build
+
+make build # ./app/Dockerfile 을 이미지 빌드 후 kind 클러스터 노드에 주입.
+
 make deploy
-make check
+
+make check # http client로 order-api 서버 응답체크.
 ```
 
-첫 `make check` 출력의 `status_counts`는 모두 `200`이어야 한다.
+- `make check` 출력의 `status_counts`는 모두 `200`이어야 한다.
+
+```bash
+{"concurrency": 1, "requests": 10, "status_counts": {"200": 10}}
+```
 
 ## 사건 처리
 
 1. 결제 서비스의 응답을 450ms로 늦춘다. Envoy의 요청 전체 제한은 300ms, 각 시도 제한은 150ms다.
 
    ```bash
-   make incident
+   make incident # kustomize로 패치(결제서비스의 응답을 의도적으로 늦추는 환경변수 주입) 후 kubectl rollout 재배포.
+
    make check
-   make load
+
+   make load # http client로 요청량 증가.
    ```
 
-   `make check`의 `504`은 요청이 300ms 안에 끝나지 않아 빠르게 끊긴 결과다. `make load`의 `503`은 동시에 밀려든 요청이 Envoy의 작은 요청 한도를 넘어서며 차단된 결과다. 둘 다 실패를 숨기는 것이 아니라, 주문 서비스가 오래 기다리지 않게 한 결과다.
+   ```bash
+   {"concurrency": 1, "requests": 10, "status_counts": {"504": 10}}
+
+   {"concurrency": 10, "requests": 20, "status_counts": {"503": 14, "504": 6}}
+   ```
+
+   - `make check`의 `504`은 요청이 300ms 안에 끝나지 않아 빠르게 끊긴 결과.
+   - `make load`의 `503`은 upstream 동시 요청 상한에 막힌 결과.
+
 
 2. Envoy가 재시도·타임아웃·요청 한도를 실제로 기록했는지 확인한다.
 
    ```bash
-   make logs
-   make stats
+   make logs # envoy 로그 확인
+   make stats # 별도의 터미널에서 포트포워딩 실행(직접 명령어 입력)
+   ```
+
+   `make stats`가 출력한 포트포워딩 명령은 **별도 터미널**에서 실행한다. 포트 포워딩은 터미널을 계속 점유하기 때문.
+
+   ```bash
    kubectl -n opsproof-traffic port-forward service/envoy-admin 19901:9901
    ```
 
-   새 터미널에서 다음을 실행한다.
+   포트 포워딩을 실행한 터미널과 다른 새 터미널에서 다음을 실행한다.
 
    ```bash
    curl -s http://localhost:19901/stats | rg 'cluster\.payment\.(upstream_rq_retry|upstream_rq_timeout|upstream_rq_pending_overflow)'

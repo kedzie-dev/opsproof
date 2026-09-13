@@ -11,7 +11,10 @@ help:
 test:
 	$(PYTHON) -m pytest $(ROOT_DIR)/tests
 
-cluster-up cluster-down build-images baseline unsafe-transition safe-transition rollback:
+cluster-up cluster-down:
+	@$(MAKE) -C $(ROOT_DIR) $@
+
+build-images baseline unsafe-transition safe-transition rollback:
 	./lab.sh $@
 
 observability-up observability-down observability-status grafana cluster-ui-up cluster-ui-down cluster-ui-status headlamp headlamp-token:

@@ -7,18 +7,6 @@ lab_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root_dir="$(cd "$lab_dir/../../.." && pwd)"
 k8s_dir="$lab_dir/k8s"
 
-cluster_up() {
-  if kind get clusters | grep -Fxq "$cluster_name"; then
-    echo "kind cluster '$cluster_name' already exists"
-    return
-  fi
-  kind create cluster --name "$cluster_name" --config "$lab_dir/kind-config.yaml" --wait 2m
-}
-
-cluster_down() {
-  kind delete cluster --name "$cluster_name"
-}
-
 build_images() {
   docker build -f "$lab_dir/Dockerfile" -t opsproof/order-api:v1 "$root_dir"
   docker tag opsproof/order-api:v1 opsproof/order-api:unsafe-v2
@@ -97,15 +85,13 @@ rollback() {
 }
 
 case "${1:-}" in
-  cluster-up) cluster_up ;;
-  cluster-down) cluster_down ;;
   build-images) build_images ;;
   baseline) apply_baseline ;;
   unsafe-transition) unsafe_transition ;;
   safe-transition) safe_transition ;;
   rollback) rollback ;;
   *)
-    echo "usage: $0 {cluster-up|cluster-down|build-images|baseline|unsafe-transition|safe-transition|rollback}" >&2
+    echo "usage: $0 {build-images|baseline|unsafe-transition|safe-transition|rollback}" >&2
     exit 2
     ;;
 esac

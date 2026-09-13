@@ -5,11 +5,12 @@
 ## 전체 흐름
 
 ```text
-루트 make → labs/deployment-safety/schema-compatibility/Makefile → lab.sh → Docker image build → kind node에 image 적재
-                                                                        ↓
-                                                                 kubectl/Kustomize로 배포
-                                                                        ↓
-                                                    FastAPI Order API ↔ PostgreSQL + migration/check Job
+루트 make → scripts/kind-cluster.sh → 공유 kind cluster 생성
+         → Lab Makefile → lab.sh → Docker image build → kind node에 image 적재
+                                                       ↓
+                                                kubectl/Kustomize로 배포
+                                                       ↓
+                                   FastAPI Order API ↔ PostgreSQL + migration/check Job
 ```
 
 ## 실행 도구
@@ -29,8 +30,8 @@
 
 ```sh
 make help          # 사용 가능한 target 나열
-make cluster-up    # Lab Makefile → lab.sh cluster-up 실행
-make build-images  # Lab Makefile → lab.sh build-images 실행
+make cluster-up    # 공유 kind cluster 생성 스크립트 실행
+make build-images  # Schema Compatibility Lab의 image build 실행
 ```
 
 다음 두 명령의 결과는 같다.
@@ -40,13 +41,13 @@ make baseline
 (cd labs/deployment-safety/schema-compatibility && ./lab.sh baseline)
 ```
 
-루트 `make`는 호환용 단축 경로다. 하위 Lab 모듈은 `labs/deployment-safety/schema-compatibility/Makefile`과 `lab.sh`에서 확인한다.
+루트의 `cluster-up`과 `cluster-down`은 모든 Lab이 공유하는 `scripts/kind-cluster.sh`를 직접 실행한다. Schema Compatibility 관련 명령은 해당 Lab의 `Makefile`과 `lab.sh`로 넘긴다.
 
 ## Experiment 명령
 
 | 명령                       | 하는 일                                                                                   | 다음 관찰                                                            |
 | -------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `make cluster-up` | `labs/deployment-safety/schema-compatibility/kind-config.yaml`로 `opsproof` cluster를 만든다. 이미 있으면 그대로 둔다. | `kind get clusters`, `kubectl --context kind-opsproof get nodes` |
+| `make cluster-up` | `kind/opsproof.yaml`로 공유 `opsproof` cluster를 만든다. 이미 있으면 그대로 둔다. | `kind get clusters`, `kubectl --context kind-opsproof get nodes` |
 | `make build-images` | API image를 Docker에서 빌드·tag하고 `kind load docker-image`로 node에 넣는다. | 출력의 `kind load docker-image` |
 | `make baseline` | namespace, PostgreSQL, v1 migration Job, v1 API Deployment를 적용하고 준비될 때까지 기다린다. | `kubectl ... get pods,jobs,deployment,statefulset` |
 | `make test` | 공용 Reference Service의 API 계약을 pytest로 확인한다. Lab Scenario나 cluster는 필요 없다. | pytest 통과 여부 |

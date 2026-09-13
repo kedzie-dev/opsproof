@@ -13,7 +13,10 @@ help:
 test:
 	@$(MAKE) -C $(LAB_DIR) test
 
-cluster-up cluster-down build-images baseline unsafe-transition safe-transition rollback:
+cluster-up cluster-down:
+	@./scripts/kind-cluster.sh $@
+
+build-images baseline unsafe-transition safe-transition rollback:
 	@$(MAKE) -C $(LAB_DIR) $@
 
 observability-up:

@@ -53,14 +53,14 @@ MVP Deployment Contract: RollingUpdate 동안 모든 synthetic `POST /orders` �
 이 디렉터리에서 Schema Compatibility Experiment를 실행한다.
 
 - `Makefile`: 모듈 실행 진입점
-- `lab.sh`: kind 클러스터 생성, 이미지 적재, 초기 버전 적용·변경·롤백 실행기
-- `kind-config.yaml`: 이 Lab 전용 kind 클러스터 설정
+- `lab.sh`: 이미지 적재, 초기 버전 적용·변경·롤백 실행기
 - `Dockerfile`: Reference Service 이미지 정의. 빌드 context는 프로젝트 루트이며 `src/`와 `pyproject.toml`을 사용한다.
 - `k8s/`: Kustomize base, revision overlay, Migration Job, Synthetic Check Job, SQL
+- 프로젝트 루트의 `scripts/kind-cluster.sh`와 `kind/opsproof.yaml`: 모든 Lab이 공유하는 kind 클러스터 생성·삭제 구현과 설정
 - 프로젝트 루트의 `observability/`: 이 Lab과 이후 모듈이 함께 쓰는 Grafana·Prometheus·Loki·Tempo·Alloy 구성
 - 프로젝트 루트의 `cluster-ui/`: Pod·Event·YAML 탐색용 Headlamp 구성
 
-프로젝트 루트에서도 같은 `make` target을 실행할 수 있다. 루트 Makefile은 이 Makefile로 명령을 넘긴다.
+프로젝트 루트에서도 같은 `make` target을 실행할 수 있다. 공유 `cluster-up`/`cluster-down`은 루트의 kind 클러스터 모듈이 처리하고, Schema Compatibility 전용 명령은 이 Makefile로 넘긴다.
 
 ## 실행 전 공통 준비
 
